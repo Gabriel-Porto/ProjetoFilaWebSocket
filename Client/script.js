@@ -19,7 +19,6 @@ socket.on("connect", () => {
   console.log(`Você conectou com o id: ${socket.id}`)
 }) 
 
-displayPosition()
 function displayPosition(position) {
   const div = document.createElement("div")
   div.textContent = position
