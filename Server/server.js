@@ -11,10 +11,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const index = users.findIndex((user) => {
-        if (user.id === socket.id) {
-          return true
-        }
-      })
+      if (user.id === socket.id) {
+        return true
+      }
+    })
 
     if (index > -1) {
       users.splice(index, 1)
@@ -27,7 +27,7 @@ io.on("connection", (socket) => {
     const user = {
       id: socket.id,
       username: queueObject.user.name,
-      queue: queueObject.room_id,
+      queue: queueObject.queue_id,
       user_id: queueObject.user.user_id, //PRECISA MSM DISSO?
     }
 
@@ -40,7 +40,7 @@ io.on("connection", (socket) => {
       .to(user.queue)
       .emit("message", `${user.username} has joined the call`)
 
-    io.to(user.queue).emit("queueUsers", {
+    io.to(user.queue).emit("queueUsersOnJoin", {
       queue: user.queue,
       users: users.filter((queueUser) => queueUser.queue === user.queue),
     })
@@ -63,12 +63,21 @@ io.on("connection", (socket) => {
   })
 
   socket.on("answerNext", () => {
-    if ( undefined === users.shift()) { //CHECAR SE A FILA ESTA VAZIA
-        console.log("Fila vazia");
+    if (undefined === users.length) {
+      socket.emit("message", "A Fila está vazia.")
     } else {
-        // RETIRAR O PRIMEIRO DA FILA
-    }
+      let userAttended = users.shift() // RETIRAR O PRIMEIRO DA FILA
+      socket
+        .to(userAttended.id)
+        .emit("message", "Você foi chamado " + userAttended.username)
 
+      socket.emit("message", `${userAttended.username} foi chamado.`)
+
+      io.emit("queueUsersOnAttended", {
+        queue: userAttended.queue,
+        users: users.filter((queueUser) => queueUser.queue === userAttended.queue),
+      })
+    }
   })
 
   socket.on("teste", () => {
